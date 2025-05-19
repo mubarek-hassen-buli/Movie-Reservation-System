@@ -1,0 +1,21 @@
+# Compiled Java classes
+*.class
+
+# IntelliJ IDEA files
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Build/output directories
+bin/
+build/
+
+
+
+
+
+# Avoid tracking .idea's workspace.xml )
+!.idea/codeStyles/
+!.idea/inspectionProfiles/

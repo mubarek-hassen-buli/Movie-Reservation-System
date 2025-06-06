@@ -1,36 +1,149 @@
 package ui;
 
+import model.Movie;
 import model.User;
-import service.FileService;
+import service.MovieService;
+import java.util.List;
 import java.util.Scanner;
+import java.util.UUID;
+import java.io.IOException;
 
 public class AdminPage {
-    public static void showAdminPage(User user) {
-        Scanner scanner = new Scanner(System.in);
-        int choice;
+    private static void clearScreen() {
+        try {
+            if (System.getProperty("os.name").contains("Windows")) {
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            }
+        } catch (IOException | InterruptedException ex) {
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+        }
+    }
+    private static Scanner scanner = new Scanner(System.in);
 
-        do {
-            System.out.println("\n==== ADMIN PAGE ====");
-            System.out.println("Welcome, " + user.getUsername());
-            System.out.println("1. Create File");
-            System.out.println("2. View Files");
-            System.out.println("3. Delete File");
-            System.out.println("4. About Us");
+    public static void showAdminPage(User admin) {
+        while (true) {
+            clearScreen();
+            System.out.println("==== ADMIN DASHBOARD ====");
+            System.out.println("1. Add New Movie");
+            System.out.println("2. View All Movies");
+            System.out.println("3. Delete Movie");
+            System.out.println("4. Update Movie Seats");
             System.out.println("5. Logout");
+            System.out.print("Choose an option: ");
 
-            System.out.print("Enter choice: ");
-            choice = scanner.nextInt();
-            scanner.nextLine(); // consume newline
+            String choice = scanner.nextLine();
 
             switch (choice) {
-                case 1 -> FileService.createFile();
-                case 2 -> FileService.viewFiles();
-                case 3 -> FileService.deleteFile();
-                case 4 -> AboutPage.show();
-                case 5 -> System.out.println("Logging out...");
-                default -> System.out.println("Invalid choice. Try again.");
+                case "1":
+                    addNewMovie();
+                    break;
+                case "2":
+                    viewAllMovies();
+                    break;
+                case "3":
+                    deleteMovie();
+                    break;
+                case "4":
+                    updateMovieSeats();
+                    break;
+                case "5":
+                    System.out.println("Logging out...");
+                    return;
+                default:
+                    System.out.println("Invalid option!");
             }
+        }
+    }
 
-        } while (choice != 5);
+    private static void addNewMovie() {
+        System.out.println("\n==== ADD NEW MOVIE ====");
+        
+        System.out.print("Enter movie title: ");
+        String title = scanner.nextLine();
+        
+        System.out.print("Enter duration (e.g., 2h 30m): ");
+        String duration = scanner.nextLine();
+        
+        System.out.print("Enter showtime (e.g., 2024-01-20 18:30): ");
+        String showtime = scanner.nextLine();
+        
+        System.out.print("Enter number of available seats: ");
+        int seats = Integer.parseInt(scanner.nextLine());
+        
+        System.out.print("Enter ticket price: ");
+        double price = Double.parseDouble(scanner.nextLine());
+
+        // Get all movies to determine next ID
+        List<Movie> existingMovies = MovieService.getAllMovies();
+        int nextNumber = existingMovies.size() + 1;
+        String movieId = String.format("mov%d", nextNumber);
+        Movie movie = new Movie(movieId, title, duration, showtime, seats, price);
+        MovieService.addMovie(movie);
+    }
+
+    private static void viewAllMovies() {
+        clearScreen();
+        System.out.println("==== ALL MOVIES ====");
+        List<Movie> movies = MovieService.getAllMovies();
+
+        if (movies.isEmpty()) {
+            System.out.println("No movies available.");
+            System.out.print("\nPress Enter to return to menu...");
+            scanner.nextLine();
+            return;
+        }
+
+        for (Movie movie : movies) {
+            System.out.println("\nID: " + movie.getId());
+            System.out.println("Title: " + movie.getTitle());
+            System.out.println("Duration: " + movie.getDuration());
+            System.out.println("Showtime: " + movie.getShowtime());
+            System.out.println("Available Seats: " + movie.getAvailableSeats());
+            System.out.println("Price: $" + movie.getPrice());
+            System.out.println("------------------------");
+        }
+        
+        System.out.print("\nPress Enter to return to menu...");
+        scanner.nextLine();
+    }
+
+    private static void deleteMovie() {
+        System.out.println("\n==== DELETE MOVIE ====");
+        viewAllMovies();
+
+        System.out.print("\nEnter movie ID to delete: ");
+        String movieId = scanner.nextLine();
+
+        Movie movie = MovieService.getMovieById(movieId);
+        if (movie != null) {
+            System.out.print("Are you sure you want to delete '" + movie.getTitle() + "'? (y/n): ");
+            if (scanner.nextLine().equalsIgnoreCase("y")) {
+                MovieService.deleteMovie(movieId);
+            } else {
+                System.out.println("Deletion cancelled.");
+            }
+        } else {
+            System.out.println("Movie not found!");
+        }
+    }
+
+    private static void updateMovieSeats() {
+        System.out.println("\n==== UPDATE MOVIE SEATS ====");
+        viewAllMovies();
+
+        System.out.print("\nEnter movie ID to update: ");
+        String movieId = scanner.nextLine();
+
+        Movie movie = MovieService.getMovieById(movieId);
+        if (movie != null) {
+            System.out.println("Current available seats: " + movie.getAvailableSeats());
+            System.out.print("Enter new number of available seats: ");
+            int newSeats = Integer.parseInt(scanner.nextLine());
+            MovieService.updateMovieSeats(movieId, newSeats);
+            System.out.println("Seats updated successfully!");
+        } else {
+            System.out.println("Movie not found!");
+        }
     }
 }

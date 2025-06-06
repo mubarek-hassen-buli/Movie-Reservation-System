@@ -2,8 +2,8 @@ import ui.LoginPage;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello, File Management System");
-        System.out.println("   Welcome to DDU CLI Project");
+        System.out.println("✋ Welcome to Movie Reservation System");
+        System.out.println("   Book your favorite movies with ease!");
         System.out.println("==================================");
 
         LoginPage.showLogin();

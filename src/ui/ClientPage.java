@@ -51,7 +51,7 @@ public class ClientPage {
                     cancelReservation(client);
                     break;
                 case "5":
-                    AboutPage.show();
+                    AboutPage.show(scanner);
                     break;
                 case "6":
                     System.out.println("\nLogging out...");

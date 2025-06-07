@@ -22,7 +22,7 @@ public class ClientPage {
     }
     private static Scanner scanner = new Scanner(System.in);
 
-    public static void showClientPage(User client) {
+    public static boolean showClientPage(User client) {
         while (true) {
             clearScreen();
             System.out.println("==== CLIENT DASHBOARD ====");
@@ -54,10 +54,14 @@ public class ClientPage {
                     AboutPage.show();
                     break;
                 case "6":
-                    System.out.println("Logging out...");
-                    return;
+                    System.out.println("\nLogging out...");
+                    System.out.print("Press Enter to continue...");
+                    scanner.nextLine();
+                    return true; // Indicate logout was requested
                 default:
                     System.out.println("Invalid option!");
+                    System.out.print("Press Enter to continue...");
+                    scanner.nextLine();
             }
         }
     }
@@ -97,15 +101,17 @@ public class ClientPage {
     }
 
     private static void makeReservation(User client) {
-        System.out.println("\n==== MAKE RESERVATION ====");
-        viewAvailableMovies();
-
-        System.out.print("\nEnter movie ID to book: ");
+        clearScreen();
+        System.out.println("==== MAKE RESERVATION ====");
+        
+        System.out.print("Enter movie ID to book: ");
         String movieId = scanner.nextLine();
 
         Movie movie = MovieService.getMovieById(movieId);
         if (movie == null) {
             System.out.println("Movie not found!");
+            System.out.print("\nPress Enter to return to menu...");
+            scanner.nextLine();
             return;
         }
 
@@ -173,17 +179,75 @@ public class ClientPage {
     }
 
     private static void cancelReservation(User client) {
-        System.out.println("\n==== CANCEL RESERVATION ====");
-        viewMyReservations(client);
+        clearScreen();
+        System.out.println("==== CANCEL RESERVATION ====");
+        
+        // Get user's reservations first
+        List<Reservation> reservations = ReservationService.getUserReservations(client.getUsername());
+        
+        if (reservations.isEmpty()) {
+            System.out.println("\nYou don't have any reservations to cancel.");
+            System.out.print("\nPress Enter to return to menu...");
+            scanner.nextLine();
+            return;
+        }
+        
+        // Display reservations without the "Press Enter" prompt
+        System.out.println("\nYour current reservations:");
+        for (Reservation reservation : reservations) {
+            Movie movie = MovieService.getMovieById(reservation.getMovieId());
+            System.out.println("\nReservation ID: " + reservation.getId());
+            System.out.println("Movie: " + (movie != null ? movie.getTitle() : "[Movie Removed]"));
+            System.out.println("Number of Seats: " + reservation.getNumberOfSeats());
+            System.out.println("Total Price: $" + reservation.getTotalPrice());
+            System.out.println("Booking Time: " + reservation.getBookingTime());
+            System.out.println("------------------------");
+        }
 
-        System.out.print("\nEnter reservation ID to cancel: ");
-        String reservationId = scanner.nextLine();
-
-        System.out.print("Are you sure you want to cancel this reservation? (y/n): ");
-        if (scanner.nextLine().equalsIgnoreCase("y")) {
-            ReservationService.cancelReservation(reservationId);
-        } else {
-            System.out.println("Cancellation aborted.");
+        // Input validation loop
+        while (true) {
+            System.out.print("\nEnter reservation ID to cancel (or 'q' to go back): ");
+            String input = scanner.nextLine().trim();
+            
+            if (input.equalsIgnoreCase("q")) {
+                return;  // User chose to go back
+            }
+            
+            if (input.isEmpty()) {
+                System.out.println("Reservation ID cannot be empty. Please try again.");
+                continue;
+            }
+            
+            // Check if the reservation exists and belongs to the user
+            boolean validReservation = false;
+            for (Reservation r : reservations) {
+                if (r.getId().equalsIgnoreCase(input)) {
+                    validReservation = true;
+                    break;
+                }
+            }
+            
+            if (!validReservation) {
+                System.out.println("Invalid reservation ID. Please enter a valid ID from the list above.");
+                continue;
+            }
+            
+            // Confirmation
+            System.out.print("\nAre you sure you want to cancel this reservation? (y/n): ");
+            String confirm = scanner.nextLine().trim().toLowerCase();
+            
+            if (confirm.equals("y")) {
+                // Clear the screen before showing the result
+                clearScreen();
+                System.out.println("==== CANCELLATION RESULT ====\n");
+                ReservationService.cancelReservation(input);
+            } else {
+                System.out.println("\nCancellation aborted.");
+            }
+            
+            System.out.print("\nPress Enter to return to menu...");
+            scanner.nextLine();
+            return;
         }
     }
 }

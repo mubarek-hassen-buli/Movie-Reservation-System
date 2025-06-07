@@ -110,40 +110,56 @@ public class AdminPage {
 
     private static void deleteMovie() {
         System.out.println("\n==== DELETE MOVIE ====");
-        viewAllMovies();
-
-        System.out.print("\nEnter movie ID to delete: ");
-        String movieId = scanner.nextLine();
-
-        Movie movie = MovieService.getMovieById(movieId);
-        if (movie != null) {
-            System.out.print("Are you sure you want to delete '" + movie.getTitle() + "'? (y/n): ");
-            if (scanner.nextLine().equalsIgnoreCase("y")) {
-                MovieService.deleteMovie(movieId);
-            } else {
-                System.out.println("Deletion cancelled.");
+        
+        while (true) {
+            System.out.print("\nEnter movie ID to delete (or press Enter to return to menu): ");
+            String input = scanner.nextLine().trim();
+            
+            if (input.isEmpty()) {
+                return; // Return to menu if user presses Enter
             }
-        } else {
-            System.out.println("Movie not found!");
+            
+            Movie movie = MovieService.getMovieById(input);
+            if (movie != null) {
+                MovieService.deleteMovie(input);
+                System.out.println("Movie deleted successfully!");
+                return;
+            } else {
+                System.out.println("Error: Movie with ID " + input + " does not exist!");
+            }
         }
     }
 
     private static void updateMovieSeats() {
         System.out.println("\n==== UPDATE MOVIE SEATS ====");
-        viewAllMovies();
-
-        System.out.print("\nEnter movie ID to update: ");
-        String movieId = scanner.nextLine();
-
-        Movie movie = MovieService.getMovieById(movieId);
-        if (movie != null) {
-            System.out.println("Current available seats: " + movie.getAvailableSeats());
-            System.out.print("Enter new number of available seats: ");
-            int newSeats = Integer.parseInt(scanner.nextLine());
-            MovieService.updateMovieSeats(movieId, newSeats);
-            System.out.println("Seats updated successfully!");
-        } else {
-            System.out.println("Movie not found!");
+        
+        while (true) {
+            System.out.print("\nEnter movie ID to update (or press Enter to return to menu): ");
+            String input = scanner.nextLine().trim();
+            
+            if (input.isEmpty()) {
+                return; // Return to menu if user presses Enter
+            }
+            
+            Movie movie = MovieService.getMovieById(input);
+            if (movie != null) {
+                System.out.println("Current available seats: " + movie.getAvailableSeats());
+                System.out.print("Enter new number of available seats: ");
+                try {
+                    int newSeats = Integer.parseInt(scanner.nextLine().trim());
+                    if (newSeats < 0) {
+                        System.out.println("Error: Number of seats cannot be negative!");
+                        continue;
+                    }
+                    MovieService.updateMovieSeats(input, newSeats);
+                    System.out.println("Seats updated successfully!");
+                    return;
+                } catch (NumberFormatException e) {
+                    System.out.println("Error: Please enter a valid number!");
+                }
+            } else {
+                System.out.println("Error: Movie with ID " + input + " does not exist!");
+            }
         }
     }
 }

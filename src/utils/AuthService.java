@@ -16,11 +16,32 @@ public class AuthService {
         // Load existing users from file
         loadUsers();
         
-        // Add default admin if no users exist
-        if (users.isEmpty()) {
-            users.add(new User("admin", "admin123", "admin"));
-            saveUsers();
+        // Add or update default admin
+        boolean adminExists = false;
+        int adminIndex = -1;
+        
+        // Find if admin exists and get its index
+        for (int i = 0; i < users.size(); i++) {
+            if (users.get(i).getUsername().equals("mubi")) {
+                adminExists = true;
+                adminIndex = i;
+                break;
+            }
         }
+        
+        // Create or update admin user
+        User adminUser = new User("mubi", "mubi000", "admin");
+        
+        if (adminExists) {
+            // Update existing admin
+            users.set(adminIndex, adminUser);
+        } else {
+            // Add new admin
+            users.add(adminUser);
+        }
+        
+        // Save changes
+        saveUsers();
     }
 
     private static void loadUsers() {
@@ -69,9 +90,22 @@ public class AuthService {
     public static User login(String username, String password) throws UserNotFoundException, IncorrectPasswordException {
         // Reload users to ensure up-to-date data
         loadUsers();
+        
+        // Debug: Print all loaded users
+        System.out.println("Debug - Loaded users:");
+        for (User u : users) {
+            System.out.println("Username: " + u.getUsername() + ", Password: " + u.getPassword() + ", Role: " + u.getRole());
+        }
     
         for (User user : users) {
             if (user.getUsername().equals(username)) {
+                // Debug: Print the comparison
+                System.out.println("Debug - Comparing passwords for user: " + username);
+                System.out.println("Stored password: '" + user.getPassword() + "'");
+                System.out.println("Provided password: '" + password + "'");
+                System.out.println("Password length stored: " + user.getPassword().length());
+                System.out.println("Password length provided: " + password.length());
+                
                 if (user.getPassword().equals(password)) {
                     return user;
                 } else {
